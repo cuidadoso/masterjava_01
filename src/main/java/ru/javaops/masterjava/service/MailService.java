@@ -1,8 +1,11 @@
 package ru.javaops.masterjava.service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 public class MailService {
     private static final String OK = "OK";
@@ -11,10 +14,58 @@ public class MailService {
     private static final String INTERRUPTED_BY_TIMEOUT = "+++ Interrupted by timeout";
     private static final String INTERRUPTED_EXCEPTION = "+++ InterruptedException";
 
-    public GroupResult sendToList(final String template, final Set<String> emails) throws Exception {
-        return new GroupResult(0, Collections.emptyList(), null);
-    }
+    private final ExecutorService mailExecutor = Executors.newFixedThreadPool(8);
 
+    public GroupResult sendToList(final String template, final Set<String> emails) throws Exception {
+
+        List<Future<MailResult>> futures =
+        emails.stream()
+                .map(email -> mailExecutor.submit(() -> sendToUser(template, email)))
+                .collect(Collectors.toList());
+
+        return new Callable<GroupResult>() {
+            private int succrss = 0;
+            private List<MailResult> failed = new ArrayList<>();
+            private String failedCause;
+
+            @Override
+            public GroupResult call()
+            {
+                for(Future<MailResult> future : futures) {
+                    MailResult mailResult;
+                    try
+                    {
+                        mailResult = future.get(10, TimeUnit.SECONDS);
+                    } catch(InterruptedException e)
+                    {
+                        return cancelWithFail(INTERRUPTED_EXCEPTION);
+                    } catch(ExecutionException e)
+                    {
+                        return cancelWithFail(e.getCause().toString());
+                    } catch(TimeoutException e)
+                    {
+                        return cancelWithFail(INTERRUPTED_BY_TIMEOUT);
+                    }
+                    if(mailResult.isOk()) {
+                        succrss++;
+                    } else {
+                        failed.add(mailResult);
+                        if(failed.size() >= 5) {
+                            return cancelWithFail(INTERRUPTED_BY_FAULTS_NUMBER);
+                        }
+                    }
+                }
+                return new GroupResult(succrss, failed, null);
+            }
+
+            private GroupResult cancelWithFail(String interruptedByFaultsNumber)
+            {
+                return null;
+            }
+        }.call();
+
+        //return new GroupResult(0, Collections.emptyList(), null);
+    }
 
     // dummy realization
     public MailResult sendToUser(String template, String email) throws Exception {
