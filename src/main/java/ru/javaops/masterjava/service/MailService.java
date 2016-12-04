@@ -17,6 +17,7 @@ public class MailService {
     private final ExecutorService mailExecutor = Executors.newFixedThreadPool(8);
 
     public GroupResult sendToList(final String template, final Set<String> emails) throws Exception {
+        final CompletionService<MailResult> completionService = new ExecutorCompletionService<>(mailExecutor);
 
         List<Future<MailResult>> futures =
         emails.stream()
@@ -26,12 +27,37 @@ public class MailService {
         return new Callable<GroupResult>() {
             private int succrss = 0;
             private List<MailResult> failed = new ArrayList<>();
-            private String failedCause;
 
             @Override
             public GroupResult call()
             {
-                for(Future<MailResult> future : futures) {
+                while(!futures.isEmpty()) {
+                    try
+                    {
+                        Future<MailResult> future = completionService.poll(10, TimeUnit.SECONDS);
+                        if (future == null) {
+                            return cancelWithFail(INTERRUPTED_BY_TIMEOUT);
+                        }
+                        futures.remove(future);
+                        MailResult mailResult = future.get();
+                        if(mailResult.isOk()) {
+                            succrss++;
+                        } else {
+                            failed.add(mailResult);
+                            if(failed.size() >= 5) {
+                                return cancelWithFail(INTERRUPTED_BY_FAULTS_NUMBER);
+                            }
+                        }
+                    } catch(InterruptedException e)
+                    {
+                        return cancelWithFail(INTERRUPTED_EXCEPTION);
+                    } catch(ExecutionException e)
+                    {
+                        return cancelWithFail(e.getCause().toString());
+                    }
+                }
+
+                /*for(Future<MailResult> future : futures) {
                     MailResult mailResult;
                     try
                     {
@@ -54,13 +80,14 @@ public class MailService {
                             return cancelWithFail(INTERRUPTED_BY_FAULTS_NUMBER);
                         }
                     }
-                }
+                }*/
                 return new GroupResult(succrss, failed, null);
             }
 
-            private GroupResult cancelWithFail(String interruptedByFaultsNumber)
+            private GroupResult cancelWithFail(String cause)
             {
-                return null;
+                futures.forEach(f -> f.cancel(true));
+                return new GroupResult(succrss, failed, cause);
             }
         }.call();
 
