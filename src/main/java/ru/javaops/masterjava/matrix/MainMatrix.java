@@ -20,7 +20,9 @@ public class MainMatrix {
         final int[][] matrixB = MatrixUtil.create(MATRIX_SIZE);
 
         double singleThreadSum = 0.;
+        double optimizedSingleThreadSum = 0.;
         double concurrentThreadSum = 0.;
+        double GKislinConcurrentThreadSum = 0.;
 
         for (int i = 0; i < 5; i++) {
             long start = System.currentTimeMillis();
@@ -30,10 +32,22 @@ public class MainMatrix {
             singleThreadSum += duration;
 
             start = System.currentTimeMillis();
+            final int[][] opyimizedMatrixC = MatrixUtil.singleThreadMultiplyOptimized(matrixA, matrixB);
+            duration = (System.currentTimeMillis() - start) / 1000.;
+            out("Optimized single thread time, sec: %.3f", duration);
+            optimizedSingleThreadSum += duration;
+
+            start = System.currentTimeMillis();
             final int[][] concurrentMatrixC = MatrixUtil.concurrentMultiply(matrixA, matrixB, executor);
             duration = (System.currentTimeMillis() - start) / 1000.;
             out("Concurrent thread time, sec: %.3f", duration);
             concurrentThreadSum += duration;
+
+            start = System.currentTimeMillis();
+            final int[][] concurrentGKislinMatrixC = MatrixUtil.concurrentMultiplyGKislin(matrixA, matrixB, executor);
+            duration = (System.currentTimeMillis() - start) / 1000.;
+            out("GKislin concurrent thread time, sec: %.3f", duration);
+            GKislinConcurrentThreadSum += duration;
 
             if (!MatrixUtil.compare(matrixC, concurrentMatrixC)) {
                 System.err.println("Comparison failed");
@@ -42,7 +56,9 @@ public class MainMatrix {
         }
         executor.shutdown();
         out("\nAverage single thread time, sec: %.3f", singleThreadSum / 5.);
+        out("\nAverage optimized single thread time, sec: %.3f", optimizedSingleThreadSum / 5.);
         out("Average concurrent thread time, sec: %.3f", concurrentThreadSum / 5.);
+        out("Average GKislin concurrent thread time, sec: %.3f", GKislinConcurrentThreadSum / 5.);
     }
 
     private static void out(String format, double ms) {
