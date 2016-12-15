@@ -7,8 +7,6 @@ import org.junit.Test;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 
-import static ru.javaops.masterjava.xml.util.Constants.TEST_STRING;
-
 /**
  * Created by apyreev on 12-Dec-16.
  */
@@ -17,7 +15,7 @@ public class StaxStreamProcessorTest {
     @Test
     public void readCities() throws Exception {
         try (StaxStreamProcessor processor =
-                     new StaxStreamProcessor(Resources.getResource(StaxStreamProcessorTest.class, "/payload.xml").openStream())) {
+                     new StaxStreamProcessor(Resources.getResource(StaxStreamProcessorTest.class, Constants.XML_FILE).openStream())) {
             StringBuilder resultString = new StringBuilder();
             XMLStreamReader reader = processor.getReader();
             while (reader.hasNext()) {
@@ -28,20 +26,25 @@ public class StaxStreamProcessorTest {
                     }
                 }
             }
-            Assert.assertEquals(TEST_STRING, resultString.toString());
+            Assert.assertEquals(Constants.TEST_CITY_STRING, resultString.toString());
         }
     }
 
     @Test
-    public void readCities2() throws Exception {
+    public void readElements() throws Exception {
+        Assert.assertEquals(Constants.TEST_CITY_STRING, getElementsFromXML("City"));
+        Assert.assertEquals(Constants.TEST_USER_STRING, getElementsFromXML("User"));
+    }
+
+    private String getElementsFromXML(String element) throws Exception {
         try (StaxStreamProcessor processor =
-                     new StaxStreamProcessor(Resources.getResource(StaxStreamProcessorTest.class, "/payload.xml").openStream())) {
-            StringBuilder resultString = new StringBuilder();
-            String city;
-            while ((city = processor.getElementValue("City")) != null) {
-                resultString.append(city).append("\r\n");
+                     new StaxStreamProcessor(Resources.getResource(StaxStreamProcessorTest.class, Constants.XML_FILE).openStream())) {
+            StringBuilder result = new StringBuilder();
+            String user;
+            while ((user = processor.getElementValue(element)) != null) {
+                result.append(user).append("\r\n");
             }
-            Assert.assertEquals(TEST_STRING, resultString.toString());
+            return result.toString();
         }
     }
 }

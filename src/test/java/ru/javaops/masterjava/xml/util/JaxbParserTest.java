@@ -17,14 +17,14 @@ public class JaxbParserTest {
     private static final JaxbParser JAXB_PARSER = new JaxbParser(ObjectFactory.class);
 
     static {
-        JAXB_PARSER.setSchema(Schemas.ofClasspath("/payload.xsd"));
+        JAXB_PARSER.setSchema(Schemas.ofClasspath(Constants.XSD_FILE));
     }
 
     @Test
     public void testPayload() throws Exception {
 //        JaxbParserTest.class.getResourceAsStream("/city.xml")
         Payload payload = JAXB_PARSER.unmarshal(
-                Resources.getResource(JaxbParserTest.class, "/payload.xml").openStream());
+                Resources.getResource(JaxbParserTest.class, Constants.XML_FILE).openStream());
         String strPayload = JAXB_PARSER.marshal(payload);
         JAXB_PARSER.validate(strPayload);
         System.out.println(strPayload);

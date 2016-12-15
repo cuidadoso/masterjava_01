@@ -6,8 +6,6 @@ import org.junit.Test;
 
 import java.io.InputStream;
 
-import static ru.javaops.masterjava.xml.util.Constants.TEST_STRING;
-
 /**
  * Created by apyreev on 13-Dec-16.
  */
@@ -15,12 +13,15 @@ public class XsltProcessorTest {
 
     @Test
     public void transform() throws Exception {
-        try (InputStream xslInputStream = Resources.getResource(XsltProcessorTest.class, "/cities.xsl").openStream();
-             InputStream xmlInputStream = Resources.getResource(XsltProcessorTest.class, "/payload.xml").openStream()){
+            Assert.assertEquals(Constants.TEST_CITY_STRING, getElementsFromXML(Constants.CITY_XSL_FILE));
+            Assert.assertEquals(Constants.TEST_USER_STRING, getElementsFromXML(Constants.USER_XSL_FILE));
+    }
 
+    private String getElementsFromXML(String xslFile) throws Exception {
+        try (InputStream xslInputStream = Resources.getResource(XsltProcessorTest.class, xslFile).openStream();
+             InputStream xmlInputStream = Resources.getResource(XsltProcessorTest.class, Constants.XML_FILE).openStream()){
             XsltProcessor processor = new XsltProcessor(xslInputStream);
-            String resultString = processor.transform(xmlInputStream);
-            Assert.assertEquals(TEST_STRING, resultString);
+            return processor.transform(xmlInputStream);
         }
     }
 }
