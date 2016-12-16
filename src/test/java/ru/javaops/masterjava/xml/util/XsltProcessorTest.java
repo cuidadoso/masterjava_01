@@ -18,8 +18,8 @@ public class XsltProcessorTest {
     }
 
     private String getElementsFromXML(String xslFile) throws Exception {
-        try (InputStream xslInputStream = Resources.getResource(XsltProcessorTest.class, xslFile).openStream();
-             InputStream xmlInputStream = Resources.getResource(XsltProcessorTest.class, Constants.XML_FILE).openStream()){
+        try (InputStream xslInputStream = Resources.getResource(xslFile).openStream();
+             InputStream xmlInputStream = Resources.getResource(Constants.XML_FILE).openStream()){
             XsltProcessor processor = new XsltProcessor(xslInputStream);
             return processor.transform(xmlInputStream);
         }

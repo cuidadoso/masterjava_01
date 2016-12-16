@@ -24,7 +24,7 @@ public class JaxbParserTest {
     public void testPayload() throws Exception {
 //        JaxbParserTest.class.getResourceAsStream("/city.xml")
         Payload payload = JAXB_PARSER.unmarshal(
-                Resources.getResource(JaxbParserTest.class, Constants.XML_FILE).openStream());
+                Resources.getResource(Constants.XML_FILE).openStream());
         String strPayload = JAXB_PARSER.marshal(payload);
         JAXB_PARSER.validate(strPayload);
         System.out.println(strPayload);
@@ -33,7 +33,7 @@ public class JaxbParserTest {
     @Test
     public void testCity() throws Exception {
         JAXBElement<CityType> cityElement = JAXB_PARSER.unmarshal(
-                Resources.getResource(JaxbParserTest.class, "/city.xml").openStream());
+                Resources.getResource("city.xml").openStream());
         CityType city = cityElement.getValue();
         JAXBElement<CityType> cityElement2 =
                 new JAXBElement<>(new QName("http://javaops.ru", "City"), CityType.class, city);

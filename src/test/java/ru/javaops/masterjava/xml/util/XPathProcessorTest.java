@@ -23,7 +23,7 @@ public class XPathProcessorTest {
 
     private String getElementsFromXML(String exp) throws Exception {
         try (InputStream is =
-                     Resources.getResource(StaxStreamProcessorTest.class, Constants.XML_FILE).openStream()) {
+                     Resources.getResource(Constants.XML_FILE).openStream()) {
             XPathProcessor processor = new XPathProcessor(is);
             XPathExpression expression = XPathProcessor.getExpression(exp);
             NodeList nodes = processor.evaluete(expression, XPathConstants.NODESET);
